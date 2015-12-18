@@ -1,11 +1,12 @@
 import urllib
 import datetime as dt
+import threading
+
 
 # The sensor class contains current and previous measurements,
 # the measurement time as a datetime object
 # as well as location and ip address strings
 class Sensor(object):
-
     def __init__(self, location, ipaddress):
         self.time = dt.datetime.now()
         self.temp = 0.0
@@ -33,6 +34,7 @@ class Sensor(object):
 
     # The delta function returns the difference between the last measurement
     # and the current measurement as a tuple
+    @property
     def delta(self):
         tempdelta = self.templast - self.temp
         humidelta = self.humilast - self.humilast

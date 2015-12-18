@@ -1,5 +1,6 @@
 import threading
 from string import Template
+import Queue
 
 import Adafruit_CharLCD as LCD
 import Sensor
@@ -17,65 +18,40 @@ degrees = '\x00'
 up = '\x01\x01\x01'
 down = '\x02\x02\x02'
 
-# String templates for LCD
-measStr = Template('TMP:${tempval}' + degrees + ' RH:${humival}%')
-measDict = {'tempval': '---',
-            'humival': '---'}
 
 ##############################
 
 # Instantiate sensor and show blank readings
-room1 = Sensor.Sensor('Front Room', '192.168.1.57')
-lcd.message(measStr.substitute(measDict))
-lcd.message('\n' + room1.timeFormat())
-room1.now()
+# room1 = Sensor.Sensor('Front Room', '192.168.1.57')
+# lcd.message(measStr.substitute(measDict))
+# lcd.message('\n' + room1.timeFormat())
+
 
 # Threading to try and speed up the IO slowness of urlopen
-# Instantiate thread lock
-
-
-def sensorpoll():
-    global room1
+def sensorget(dataQueue):
+    room1 = Sensor.Sensor('Front Room', '192.168.1.57')
     while True:
-        print 'Thread sensor Start'
         room1.now()
-        print 'Thread sensor Finished'
+        dataQueue.put(room1)
+        print room1
+        print('Put something in the queue!')
 
-# Main loop
-def lcdupdate(lock):
-    global room1
-    global measDict
-    global measDict
+
+def data_display(dataQueue):
     while True:
-        try:
-            print 'looped!'
-            # room1.now()  # Get current readings
-            # Format values for LCD and store in relevant dictionary entry
-            measDict['tempval'] = '{:.1f}'.format(room1.temp)
-            measDict['humival'] = '{}'.format(room1.humi)
-            print room1.temp
-            print room1.humi
+        latest = dataQueue.get()
+        lcd.home()
+        lcd.message(('TMP:{:.1f}' + degrees + ' RH:{}%').format(latest.temp, latest.humi))
+        print('Tried to print a message!')
 
-            # Update display if change
-            if (room1.delta()[0] or room1.delta()[1]) != 0:
-                lock.acquire()
-                print 'locked'
-                lcd.clear()
-                lcd.message(measStr.substitute(measDict))
-                lcd.message('\n' + room1.timeFormat())
-                lock.release()
-                print 'unlocked'
-            else:
-                lcd.home()
-                lcd.message('\n' + room1.timeFormat())
-        # If wifi goes down notify on screen
-        except IOError:
-            # Message on screen
-            pass
 
-lock = threading.RLock()
-updatethread = threading.Thread(target=lcdupdate(lock))
-updatethread.start()
-pollingthread = threading.Thread(target=sensorpoll)
-pollingthread.daemon = True
-pollingthread.start()
+# Create Queue for passing data from sensor
+measureQueue = Queue.LifoQueue()
+
+sensorThread = threading.Thread(target=sensorget(measureQueue))
+sensorThread.daemon = True
+lcdThread = threading.Thread(target=data_display(measureQueue))
+lcdThread.daemon = True
+sensorThread.start()
+lcdThread.start()
+

@@ -7,24 +7,28 @@ import Adafruit_CharLCD as LCD
 
 # Initialise LCD using pins
 lcd = LCD.Adafruit_CharLCDPlate()
-lcd.set_color(1,1,1)
+lcd.set_color(1, 1, 1)
 
 backlightstatus = True
 
+
 # Define LCD functions
 def msgLn(msg, row):
-    #global lcd
+    # global lcd
     lcd.set_cursor(0, row)
     lcd.message(msg)
 
+
 def msgCl(msg):
-    #global lcd
+    # global lcd
     lcd.clear()
     lcd.message(msg)
+
 
 def msgInsert(msg, column, row):
     lcd.set_cursor(column, row)
     lcd.message(msg)
+
 
 def msgTyped(msg, row, pause):
     lcd.set_cursor(0, row)
@@ -32,11 +36,13 @@ def msgTyped(msg, row, pause):
         lcd.message(letter)
         time.sleep(pause)
 
+
 def switchBL():
     if backlightstatus == True:
         lcd.set_color(*on)
     elif backlightstatus == False:
         lcd.set_color(*off)
+
 
 def switchBLpress():
     global backlightstatus
@@ -44,6 +50,7 @@ def switchBLpress():
     if lcd.is_pressed(LCD.SELECT):
         backlightstatus = not backlightstatus
         switchBL()
+
 
 # This flashes the display on and off a certain color
 def flashCol(color, times):
@@ -53,16 +60,20 @@ def flashCol(color, times):
         lcd.set_color(*on)
         time.sleep(0.05)
 
+
 # Data/string functions
 def sbtrct(now, prev):
     return float(now) - float(prev)
 
+
 def diff(now, prev):
     return map(sbtrct, now, prev)
+
 
 def addChar(msg, char):
     msg = msg + char
     return msg
+
 
 def arrow(delta, val):
     global backlightstatus
@@ -77,20 +88,20 @@ def arrow(delta, val):
             flashCol(blue, 3)
         return down
 
+
 # Colours & custom characters
 lcd.create_char(0, [24, 24, 3, 4, 4, 4, 3, 0])  # Create a degrees character
-lcd.create_char(1, [4,14,21,4,4,0,0,0])  # Up arrow
-lcd.create_char(2, [0,0,4,4,21,14,4,0])  # Down arrow
+lcd.create_char(1, [4, 14, 21, 4, 4, 0, 0, 0])  # Up arrow
+lcd.create_char(2, [0, 0, 4, 4, 21, 14, 4, 0])  # Down arrow
 
-lcd.create_char(3, [16,16,16,16,16,16,16,16])  # 20pc box
-lcd.create_char(4, [28,28,28,28,28,28,28,28])  # 60pc box
-lcd.create_char(5, [31,31,31,31,31,31,31,31])  # 100pc box
+lcd.create_char(3, [16, 16, 16, 16, 16, 16, 16, 16])  # 20pc box
+lcd.create_char(4, [28, 28, 28, 28, 28, 28, 28, 28])  # 60pc box
+lcd.create_char(5, [31, 31, 31, 31, 31, 31, 31, 31])  # 100pc box
 
-#lcd.create_char(6, [0,14,17,21,17,14,0,0])      # Loading circle 2
-#lcd.create_char(7, [0,14,31,31,31,14,0,0])      # Loading circle 1
+# lcd.create_char(6, [0,14,17,21,17,14,0,0])      # Loading circle 2
+# lcd.create_char(7, [0,14,31,31,31,14,0,0])      # Loading circle 1
 
 boxfills = ['\x03', '\x04', '\x05']
-
 
 deg = '\x00'
 up = '\x01\x01\x01  '
@@ -101,12 +112,12 @@ blue = (0, 0, 1)
 off = (0, 0, 0)
 on = (1, 1, 1)
 
+
 ##############################
 # Create a read function
 # NB this includes backlight checking because its so slow
 # Threading with a watched queue may be a good solution to that
 def readAll():
-
     # Poll server for page srcs
     msgInsert(' ', 13, 1)
     sockT = urllib.urlopen("http://192.168.1.57/temp")
@@ -114,22 +125,24 @@ def readAll():
     switchBLpress()
 
     msgInsert(':', 13, 1)
-    sockH= urllib.urlopen("http://192.168.1.57/humidity")
+    sockH = urllib.urlopen("http://192.168.1.57/humidity")
     srcH = sockH.read()
     switchBLpress()
 
-    Temperature = srcT.split(" ",1)
-    Humidity = srcH.split(" ",1)
+    Temperature = srcT.split(" ", 1)
+    Humidity = srcH.split(" ", 1)
 
     Temp = Temperature[1].strip(' F')
     Hum = int(Humidity[1].strip('%'))
 
-    TempC = (float(Temp) -32) / 1.8
+    TempC = (float(Temp) - 32) / 1.8
 
     sockT.close()
     sockH.close()
 
     return (TempC, Hum)
+
+
 ##############################
 
 ######################################################################
@@ -146,7 +159,7 @@ msgTyped(loadMessage, 0, 0.07)
 # Make Loading bar animation
 for char in range(16):
     for slice in boxfills:
-        lcd.set_cursor(char, 1) # Set cursor position
+        lcd.set_cursor(char, 1)  # Set cursor position
         lcd.message(slice)
         time.sleep(0.02)
 
@@ -184,8 +197,8 @@ for char in range(16):
 
 # Template string for display and blank dict for strings
 msgStr = Template('TMP:${temp} RH:${humi}')
-msgDict = {'temp' : '---',
-           'humi' : '---' }
+msgDict = {'temp': '---',
+           'humi': '---'}
 
 # Initialise lastData to reasonable values for diff calculation
 lastData = [0, 0]
@@ -223,8 +236,8 @@ while True:
         msgLn(timeStr, 1)
 
         lastData = data
-        n = 0  #Reset attempt counter
-    #   time.sleep(2)  # Wait for new reading
+        n = 0  # Reset attempt counter
+    # time.sleep(2)  # Wait for new reading
 
     except IOError:
         print('IOError')
