@@ -20,38 +20,8 @@ down = '\x02\x02\x02'
 
 
 ##############################
+room1 = Sensor.AutoUpdating('Front Room', '192.168.1.57')
 
-# Instantiate sensor and show blank readings
-# room1 = Sensor.Sensor('Front Room', '192.168.1.57')
-# lcd.message(measStr.substitute(measDict))
-# lcd.message('\n' + room1.timeFormat())
-
-
-# Threading to try and speed up the IO slowness of urlopen
-def sensorget(dataQueue):
-    room1 = Sensor.Sensor('Front Room', '192.168.1.57')
-    while True:
-        room1.now()
-        dataQueue.put(room1)
-        print room1
-        print('Put something in the queue!')
-
-
-def data_display(dataQueue):
-    while True:
-        latest = dataQueue.get()
-        lcd.home()
-        lcd.message(('TMP:{:.1f}' + degrees + ' RH:{}%').format(latest.temp, latest.humi))
-        print('Tried to print a message!')
-
-
-# Create Queue for passing data from sensor
-measureQueue = Queue.LifoQueue()
-
-sensorThread = threading.Thread(target=sensorget(measureQueue))
-sensorThread.daemon = True
-lcdThread = threading.Thread(target=data_display(measureQueue))
-lcdThread.daemon = True
-sensorThread.start()
-lcdThread.start()
-
+while True:
+    lcd.home()
+    lcd.message(('TMP:{:.1f}' + degrees + ' RH:{}%').format(room1.temp, room1.humi))
