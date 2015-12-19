@@ -11,21 +11,29 @@ class AutoUpdating(object):
 
     def __init__(self, loc, ip):
         """ Constructor
-        :type interval: int
-        :param interval: Check interval, in seconds
+        :type loc: str
+        :param self.location: Location (room) of sensor
         """
         self.temp = 0.0
         self.humi = 0
+        self.temp_previous = 0.0
+        self.humi_previous = 0
+        self.has_changed = False
         self.ipaddress = ip
         self.location = loc
         self.time = dt.datetime.now()
+
         thread = threading.Thread(target=self.updater, args=())
-        thread.daemon = True                            # Daemonize thread
-        thread.start()                                  # Start the execution
+        thread.daemon = True  # Daemonize thread
+        thread.start()  # Start the execution
 
     def updater(self):
         """ Method that runs forever """
         while True:
+            self.temp_previous = self.temp
+            self.humi_previous = self.humi
+            self.timelast = self.time
+
             # Download page sources
             sockt = urllib.urlopen('http://' + self.ipaddress + '/temp')
             srct = sockt.read()
@@ -34,49 +42,26 @@ class AutoUpdating(object):
             sockh = urllib.urlopen('http://' + self.ipaddress + '/humidity')
             srch = sockh.read()
             sockh.close()
+
             # Split, strip strings and set values
             tempf = srct.split(' ', 1)[1].strip(' F')
             self.humi = int(srch.split(' ', 1)[1].strip('%'))
             self.temp = (float(tempf) - 32) / 1.8  # Convert temperature to celcius
 
+            # Calculate change values
+            self.temp_change = self.temp - self.temp_previous
+            self.humi_change = self.humi - self.humi_previous
+            # Flag change
+            if (self.temp_change or self.humi_change) != 0:
+                self.has_changed = True
+            else:
+                self.has_changed = False
 
-# The sensor class contains current and previous measurements,
-# the measurement time as a datetime object
-# as well as location and ip address strings
-# class Sensor(object):
-#     def __init__(self, location, ipaddress):
-#         self.time = dt.datetime.now()
-#         self.temp = 0.0
-#         self.humi = 0
-#         self.loc = location
-#         self.ip = ipaddress
-#
-#     def now(self):
-#         # Set last measurement values
-#         self.templast = self.temp
-#         self.humilast = self.humi
-#         self.timelast = self.time
-#         # Download page sources
-#         sockt = urllib.urlopen('http://' + self.ip + '/temp')
-#         srct = sockt.read()
-#         sockt.close()
-#         self.time = dt.datetime.now()  # Set new measurement time
-#         sockh = urllib.urlopen('http://' + self.ip + '/humidity')
-#         srch = sockh.read()
-#         sockh.close()
-#         # Split, strip strings and set values
-#         tempf = srct.split(' ', 1)[1].strip(' F')
-#         self.humi = int(srch.split(' ', 1)[1].strip('%'))
-#         self.temp = (float(tempf) - 32) / 1.8  # Convert temperature to celcius
-#
-#     # The delta function returns the difference between the last measurement
-#     # and the current measurement as a tuple
-#     @property
-#     def delta(self):
-#         tempdelta = self.templast - self.temp
-#         humidelta = self.humilast - self.humilast
-#         return tempdelta, humidelta
-#
-#     # Returns a nicely datetime string
-#     def timeFormat(self, layout='%a %d %b %H:%M'):
-#         return self.time.strftime(layout)
+
+# Test Code
+if __name__ == '__main__':
+
+    front_room = AutoUpdating('Front Room', '192.168.1.57')
+    while True:
+        if front_room.has_changed:
+            print front_room.temp
