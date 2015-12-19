@@ -1,5 +1,6 @@
 import urllib
 import datetime as dt
+import time
 import threading
 
 
@@ -11,17 +12,22 @@ class AutoUpdating(object):
 
     def __init__(self, loc, ip):
         """ Constructor
+        :rtype: object
         :type loc: str
         :param self.location: Location (room) of sensor
+        :type self.temp: float
+        :type self.ip_address: str
         """
         self.temp = 0.0
         self.humi = 0
+        self.temp_change = None
+        self.humi_change = None
         self.temp_previous = 0.0
         self.humi_previous = 0
         self.has_changed = False
-        self.ipaddress = ip
+        self.ip_address = ip
         self.location = loc
-        self.time = dt.datetime.now()
+        self.measurement_time = dt.datetime.now()
 
         thread = threading.Thread(target=self.updater, args=())
         thread.daemon = True  # Daemonize thread
@@ -32,14 +38,14 @@ class AutoUpdating(object):
         while True:
             self.temp_previous = self.temp
             self.humi_previous = self.humi
-            self.timelast = self.time
+            self.timelast = self.measurement_time
 
             # Download page sources
-            sockt = urllib.urlopen('http://' + self.ipaddress + '/temp')
+            sockt = urllib.urlopen('http://' + self.ip_address + '/temp')
             srct = sockt.read()
             sockt.close()
-            self.time = dt.datetime.now()  # Set new measurement time
-            sockh = urllib.urlopen('http://' + self.ipaddress + '/humidity')
+            self.measurement_time = dt.datetime.now()  # Set new measurement time
+            sockh = urllib.urlopen('http://' + self.ip_address + '/humidity')
             srch = sockh.read()
             sockh.close()
 
@@ -56,6 +62,8 @@ class AutoUpdating(object):
                 self.has_changed = True
             else:
                 self.has_changed = False
+
+            time.sleep(2)
 
 
 # Test Code

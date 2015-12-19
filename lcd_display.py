@@ -34,11 +34,11 @@ def display_reading(sensor):
 # Initialise AutoUpdating Sensor object
 room1 = Sensor.AutoUpdating('Front Room', '192.168.1.57')
 # Make another one to test multi room functionality
-room2 = Sensor.AutoUpdating('Kitchen', '192.168.1.57')
-room3 = Sensor.AutoUpdating('Bathroom', '192.168.1.57')
+# room2 = Sensor.AutoUpdating('Kitchen', '192.168.1.57')
+# room3 = Sensor.AutoUpdating('Bathroom', '192.168.1.57')
 
 # Create reference list
-sensors = [room1, room2, room3]
+sensors = [room1]
 current = 0  # Initialises room counter
 
 # Loading flashtext and animation
