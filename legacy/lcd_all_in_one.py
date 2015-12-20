@@ -194,7 +194,7 @@ for char in range(16):
 #     time.sleep(i + 1)
 # time.sleep(3)
 # lcd.clear()
-
+#
 # Template string for display and blank dict for strings
 msgStr = Template('TMP:${temp} RH:${humi}')
 msgDict = {'temp': '---',

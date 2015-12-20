@@ -12,8 +12,8 @@ class AutoUpdating(object):
 
     def __init__(self, loc, ip):
         """ Constructor
-        :rtype: object
-        :type loc: str
+        :rtype: Sensor Object
+        :type self.location: str
         :param self.location: Location (room) of sensor
         :type self.temp: float
         :type self.ip_address: str
