@@ -29,11 +29,11 @@ class AutoUpdating(object):
         self.location = loc
         self.measurement_time = dt.datetime.now()
 
-        thread = threading.Thread(target=self.updater, args=())
+        thread = threading.Thread(target=self._updater, args=())
         thread.daemon = True  # Daemonize thread
         thread.start()  # Start the execution
 
-    def updater(self):
+    def _updater(self):
         """ Method that runs forever """
         while True:
             self.temp_previous = self.temp
@@ -44,7 +44,8 @@ class AutoUpdating(object):
             sockt = urllib.urlopen('http://' + self.ip_address + '/temp')
             srct = sockt.read()
             sockt.close()
-            self.measurement_time = dt.datetime.now()  # Set new measurement time
+            # Set new measurement time
+            self.measurement_time = dt.datetime.now()
             sockh = urllib.urlopen('http://' + self.ip_address + '/humidity')
             srch = sockh.read()
             sockh.close()
@@ -57,6 +58,7 @@ class AutoUpdating(object):
             # Calculate change values
             self.temp_change = self.temp - self.temp_previous
             self.humi_change = self.humi - self.humi_previous
+
             # Flag change
             if (self.temp_change or self.humi_change) != 0:
                 self.has_changed = True
