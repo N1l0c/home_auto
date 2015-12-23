@@ -3,6 +3,8 @@ import datetime as dt
 import time
 import threading
 
+from w1thermsensor import W1ThermSensor
+
 
 class AutoUpdating(object):
     """ Threading example class
@@ -10,7 +12,7 @@ class AutoUpdating(object):
     until the application exits.
     """
 
-    def __init__(self, loc, ip):
+    def __init__(self, loc, ip, sensor='dht'):
         """ Constructor
         :rtype: Sensor Object
         :type self.location: str
@@ -28,13 +30,20 @@ class AutoUpdating(object):
         self.ip_address = ip
         self.location = loc
         self.measurement_time = dt.datetime.now()
+        self.sensor_type = sensor
+        self.dsb_sensor = None
 
-        thread = threading.Thread(target=self._updater, args=())
+        # Start the relavent sensor update thread
+        if self.sensor_type == 'dht':
+            thread = threading.Thread(target=self._dht_updater, args=())
+        elif self.sensor_type == 'dsb':
+            thread = threading.Thread(target=self._dsb_updater, args=())
+
         thread.daemon = True  # Daemonize thread
         thread.start()  # Start the execution
 
-    def _updater(self):
-        """ Method that runs forever """
+    def _dht_updater(self):
+        """ Method constantly gets latest DHT22 sensor readings from server """
         while True:
             self.temp_previous = self.temp
             self.humi_previous = self.humi
@@ -61,6 +70,32 @@ class AutoUpdating(object):
 
             # Flag change
             if (self.temp_change or self.humi_change) != 0:
+                self.has_changed = True
+            else:
+                self.has_changed = False
+
+            time.sleep(2)
+
+    def _dsb_updater(self):
+        """
+        Method for DSB sensor update
+        :return: DSB sensor readings
+        """
+        self.dsb_sensor = W1ThermSensor()
+        self.humi = '---'
+        self.humi_change = 0
+        while True:
+            # Set previous values
+            self.temp_previous = self.temp
+            self.humi_previous = self.humi
+            self.timelast = self.measurement_time
+
+            self.temp = self.dsb_sensor.get_temperature()
+            # Calculate change values
+            self.temp_change = self.temp - self.temp_previous
+
+            # Flag change
+            if self.temp_change != 0:
                 self.has_changed = True
             else:
                 self.has_changed = False
