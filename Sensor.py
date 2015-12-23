@@ -6,11 +6,16 @@ import threading
 from w1thermsensor import W1ThermSensor
 
 
-class AutoUpdating(object):
+class Sensor(object):
     """ Threading example class
     The run() method will be started and it will run in the background
     until the application exits.
     """
+    # Hex values for LCD custom characters
+    degrees = '\x00'
+    arrows_up = '\x01\x01\x01'
+    arrows_down = '\x02\x02\x02'
+    pipe = '\x03'
 
     def __init__(self, loc, ip, sensor='dht'):
         """ Constructor
@@ -74,7 +79,7 @@ class AutoUpdating(object):
             else:
                 self.has_changed = False
 
-            time.sleep(2)
+            time.sleep(60)
 
     def _dsb_updater(self):
         """
@@ -101,12 +106,31 @@ class AutoUpdating(object):
                 self.has_changed = False
 
             time.sleep(2)
+    
+    def string_both(self):
+        return ('TMP:{:.1f}' + Sensor.degrees + ' RH:{}%').format(self.temp, self.humi)
+    
+    def string_change(self):
+        if self.temp_change > 0:
+            temp_arrows = Sensor.arrows_up
+        elif self.temp_change < 0:
+            temp_arrows = Sensor.arrows_down
+        else:
+            temp_arrows = self.temp
 
+        if self.humi_change > 0:
+            humi_arrows = Sensor.arrows_up
+        elif self.humi_change < 0:
+            humi_arrows = Sensor.arrows_down
+        else:
+            humi_arrows = self.humi
+
+        return ('TMP:{:.1f}' + Sensor.degrees + ' RH:{}%').format(temp_arrows, humi_arrows)
 
 # Test Code
 if __name__ == '__main__':
 
-    front_room = AutoUpdating('Front Room', '192.168.1.57')
+    front_room = Sensor('Front Room', '192.168.1.57')
     while True:
         if front_room.has_changed:
             print front_room.temp
