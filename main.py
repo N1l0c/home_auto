@@ -3,7 +3,7 @@ import threading
 import Queue
 
 import Sensor
-import LCD
+import LCD_send as LCD
 
 ##############################
 # Create LCD print queue to make messages thread-safe
@@ -13,7 +13,7 @@ import LCD
 lcd = LCD.Display()
 
 # Sensors setup
-room1 = Sensor.Sensor('Front Room', '192.168.1.57')
+room1 = Sensor.Sensor('Front Room', '192.168.1.6')
 # # Make another one to test multi room functionality
 room2 = Sensor.Sensor('RasPi', 'localhost', 'dsb')
 # room3 = Sensor.AutoUpdating('Bathroom', '192.168.1.57')
@@ -75,13 +75,15 @@ try:
             lcd.message(sensors[current].string_both())
             sensors[current].has_changed = False
 
-# Exit cleanly on the LCD
+        # Short sleep to manage CPU usage
+        time.sleep(0.01)
+
+# Exit cleanly on the LCD in case of ctrl+C
 except KeyboardInterrupt:
-    lcd.clear()
     lcd.lcd.set_color(1, 0, 0)
-    lcd.message_row('TERMINATED')
+    lcd.message('TERMINATED')
     time.sleep(1)
-    lcd.message_row('USER CTRL+C')
+    lcd.message('USER CTRL+C')
     time.sleep(3)
-    lcd.clear()
     lcd.lcd.set_backlight(0)
+    lcd.lcd.clear()

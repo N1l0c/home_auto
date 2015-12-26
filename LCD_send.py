@@ -53,28 +53,64 @@ class Display(object):
 
         self.tick = False    # Tick counter for clock
 
-        threading.Thread(target=self._send_message, args=()).start()
+        sender = threading.Thread(target=self._send_message, args=())
+        sender.daemon = True
+        sender.start()
 
     #################################################################
-    def _add_to_queue(self, text, row=1, alignment=left):
+    @staticmethod
+    def _add_to_queue(text, row=1):
         """
 
-        :param message_tuple: Tuple containing message string, row and alignment
+        :param message_tuple: Tuple containing message string, row
         :return:
         """
         Display.lcd_queue.put((text, row))
 
-    def _send_message(self):
-        # Get message parameters from Queue and send message to lcd
-        message_tuple = Display.lcd_queue.get()
-        text = message_tuple[0]
-        row = message_tuple[1]
+    @staticmethod
+    def _send_message():
+        # Runs forever
+        while True:
+            # Get message parameters from Queue and send message to lcd
+            message_tuple = Display.lcd_queue.get()
+            text = message_tuple[0]
+            row = message_tuple[1]
 
-        # Set cursor to required row and send message
-        Display.lcd.set_cursor(0, row)
-        Display.lcd.message(text)
+            # Set cursor to required row and send message
+            Display.lcd.set_cursor(0, row)
+            Display.lcd.message(text)
+
+    def message(self, text, row=1):
+        """
+        This method takes input text string and adds whitespace if necessary. It then sends to _add_to_queue.
+        :param text: Text string to be sent to LCD
+        :param row: Row to be displayed on
+        :return:
+        """
+        # Set display row
+        # Set to 0 if invalid argument entered
+        if row == 0:
+            display_row = 0
+        else:
+            display_row = 1
+
+        # Process string for display
+        # Make whitespace string
+        if len(text) < 15:
+            spaces = 16 - len(text)
+            white_space = ' ' * spaces
+        else:
+            white_space = ''
+
+        # Add whitespace to message and then add to message queue
+        message_string = text + white_space
+        self._add_to_queue(message_string, display_row)
 
     def show_datetime24(self):
+        """
+        Infinite loop to display date and time with flashing colon on top row, called as background thread in main
+        :return:
+        """
         while True:
             self.tick = not self.tick
             self._add_to_queue((dt.datetime.now().strftime(self.datetime_strings[self.tick])), 0)

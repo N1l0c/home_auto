@@ -79,7 +79,7 @@ class Sensor(object):
             else:
                 self.has_changed = False
 
-            time.sleep(60)
+            time.sleep(2)
 
     def _dsb_updater(self):
         """
@@ -115,17 +115,17 @@ class Sensor(object):
             temp_arrows = Sensor.arrows_up
         elif self.temp_change < 0:
             temp_arrows = Sensor.arrows_down
-        else:
-            temp_arrows = self.temp
+        else:  # If only humidity changed changed display the unchanged temp
+            temp_arrows = '{:.1f}'.format(self.temp)
 
         if self.humi_change > 0:
             humi_arrows = Sensor.arrows_up
         elif self.humi_change < 0:
             humi_arrows = Sensor.arrows_down
-        else:
-            humi_arrows = self.humi
+        else:  # If only temp changed changed display the unchanged humidity
+            humi_arrows = '{}'.format(self.humi)
 
-        return ('TMP:{:.1f}' + Sensor.degrees + ' RH:{}%').format(temp_arrows, humi_arrows)
+        return ('TMP:{}' + Sensor.degrees + ' RH:{}%').format(temp_arrows, humi_arrows)
 
 # Test Code
 if __name__ == '__main__':
