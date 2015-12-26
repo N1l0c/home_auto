@@ -115,14 +115,14 @@ class Sensor(object):
             temp_arrows = Sensor.arrows_up
         elif self.temp_change < 0:
             temp_arrows = Sensor.arrows_down
-        else:  # If only humidity changed changed display the unchanged temp
+        else:  # If only humidity changed display the unchanged temp
             temp_arrows = '{:.1f}'.format(self.temp)
 
         if self.humi_change > 0:
             humi_arrows = Sensor.arrows_up
         elif self.humi_change < 0:
             humi_arrows = Sensor.arrows_down
-        else:  # If only temp changed changed display the unchanged humidity
+        else:  # If only temp changed display the unchanged humidity
             humi_arrows = '{}'.format(self.humi)
 
         return ('TMP:{}' + Sensor.degrees + ' RH:{}%').format(temp_arrows, humi_arrows)
